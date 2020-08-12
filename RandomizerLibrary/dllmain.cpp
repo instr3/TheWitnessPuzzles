@@ -26,7 +26,7 @@ extern "C" __declspec(dllexport) const char* __cdecl GenerateRandomPuzzle(int se
 	Generate* generator = new Generate();
 	generator->initPanel(0);
 	generator->resetConfig();
-	generator->generateRandom(seed);
+	generator->generateRandom(seed, false);
 	outputString = generator->exportPanel();
 	delete generator;
 	return outputString.c_str();

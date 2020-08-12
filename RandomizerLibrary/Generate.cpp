@@ -1,55 +1,56 @@
 #include "Generate.h"
 #include "pch.h"
+#include <iostream>
 
 void Generate::generate(int id, int symbol, int amount) {
 	PuzzleSymbols symbols({ std::make_pair(symbol, amount) });
-	while (!generate(id, symbols));
+	while (!generate(id, symbols, false));
 }
 
 void Generate::generate(int id, int symbol1, int amount1, int symbol2, int amount2) {
 	PuzzleSymbols symbols({ std::make_pair(symbol1, amount1), std::make_pair(symbol2, amount2) });
-	while (!generate(id, symbols));
+	while (!generate(id, symbols, false));
 }
 
 void Generate::generate(int id, int symbol1, int amount1,  int symbol2, int amount2, int symbol3, int amount3) {
 	PuzzleSymbols symbols({ std::make_pair(symbol1, amount1), std::make_pair(symbol2, amount2), std::make_pair(symbol3, amount3) });
-	while (!generate(id, symbols));
+	while (!generate(id, symbols, false));
 }
 
 void Generate::generate(int id, int symbol1, int amount1, int symbol2, int amount2, int symbol3, int amount3, int symbol4, int amount4) {
 	PuzzleSymbols symbols({ std::make_pair(symbol1, amount1), std::make_pair(symbol2, amount2), std::make_pair(symbol3, amount3), std::make_pair(symbol4, amount4) });
-	while (!generate(id, symbols));
+	while (!generate(id, symbols, false));
 }
 
 void Generate::generate(int id, int symbol1, int amount1, int symbol2, int amount2, int symbol3, int amount3, int symbol4, int amount4, int symbol5, int amount5) {
 	PuzzleSymbols symbols({ std::make_pair(symbol1, amount1), std::make_pair(symbol2, amount2), std::make_pair(symbol3, amount3), std::make_pair(symbol4, amount4),  std::make_pair(symbol5, amount5) });
-	while (!generate(id, symbols));
+	while (!generate(id, symbols, false));
 }
 
 void Generate::generate(int id, int symbol1, int amount1, int symbol2, int amount2, int symbol3, int amount3, int symbol4, int amount4, int symbol5, int amount5, int symbol6, int amount6) {
 	PuzzleSymbols symbols({ std::make_pair(symbol1, amount1), std::make_pair(symbol2, amount2), std::make_pair(symbol3, amount3), std::make_pair(symbol4, amount4),  std::make_pair(symbol5, amount5), std::make_pair(symbol6, amount6) });
-	while (!generate(id, symbols));
+	while (!generate(id, symbols, false));
 }
 
 void Generate::generate(int id, int symbol1, int amount1, int symbol2, int amount2, int symbol3, int amount3, int symbol4, int amount4, int symbol5, int amount5, int symbol6, int amount6, int symbol7, int amount7) {
 	PuzzleSymbols symbols({ std::make_pair(symbol1, amount1), std::make_pair(symbol2, amount2), std::make_pair(symbol3, amount3), std::make_pair(symbol4, amount4),  std::make_pair(symbol5, amount5), std::make_pair(symbol6, amount6), std::make_pair(symbol7, amount7) });
-	while (!generate(id, symbols));
+	while (!generate(id, symbols, false));
 }
 
 void Generate::generate(int id, int symbol1, int amount1, int symbol2, int amount2, int symbol3, int amount3, int symbol4, int amount4, int symbol5, int amount5, int symbol6, int amount6, int symbol7, int amount7, int symbol8, int amount8) {
 	PuzzleSymbols symbols({ std::make_pair(symbol1, amount1), std::make_pair(symbol2, amount2), std::make_pair(symbol3, amount3), std::make_pair(symbol4, amount4),  std::make_pair(symbol5, amount5), std::make_pair(symbol6, amount6), std::make_pair(symbol7, amount7), std::make_pair(symbol8, amount8) });
-	while (!generate(id, symbols));
+	while (!generate(id, symbols, false));
 }
 
 void Generate::generate(int id, int symbol1, int amount1, int symbol2, int amount2, int symbol3, int amount3, int symbol4, int amount4, int symbol5, int amount5, int symbol6, int amount6, int symbol7, int amount7, int symbol8, int amount8, int symbol9, int amount9) {
 	PuzzleSymbols symbols({ std::make_pair(symbol1, amount1), std::make_pair(symbol2, amount2), std::make_pair(symbol3, amount3), std::make_pair(symbol4, amount4),  std::make_pair(symbol5, amount5), std::make_pair(symbol6, amount6), std::make_pair(symbol7, amount7), std::make_pair(symbol8, amount8), std::make_pair(symbol9, amount9) });
-	while (!generate(id, symbols));
+	while (!generate(id, symbols, false));
 }
 
 void Generate::generate(int id, std::vector<std::pair<int, int>> symbolVec)
 {
 	PuzzleSymbols symbols(symbolVec);
-	while (!generate(id, symbols));
+	while (!generate(id, symbols, false));
 }
 
 std::vector<Point> Generate::_DIRECTIONS1 = { Point(0, 1), Point(0, -1), Point(1, 0), Point(-1, 0) };
@@ -400,7 +401,7 @@ bool Generate::generate_maze(int id, int numStarts, int numExits)
 //The primary generation function. id - id of the puzzle. symbols - a structure representing the amount and types of each symbol to add to the puzzle
 //The algorithm works by making a random path and then adding the chosen symbols to the grid in such a way that they will be satisfied by the path.
 //if at some point the generator fails to add a symbol while still making the solution correct, the function returns false and must be called again.
-bool Generate::generate(int id, PuzzleSymbols symbols)
+bool Generate::generate(int id, PuzzleSymbols symbols, bool debug=false)
 {
 	initPanel(id);
 
@@ -430,17 +431,22 @@ bool Generate::generate(int id, PuzzleSymbols symbols)
 		}
 	}
 	else _path = customPath;
-
-	std::vector<std::string> solution; //For debugging only
-	for (int y = 0; y < _panel->_height; y++) {
-		std::string row;
-		for (int x = 0; x < _panel->_width; x++) {
-			if (get(x, y) == PATH) {
-				row += "xx";
+	if (debug)
+	{
+		std::vector<std::string> solution; //For debugging only
+		std::cout << "Solution:" << std::endl;
+		for (int y = 0; y < _panel->_height; y++) {
+			std::string row;
+			for (int x = 0; x < _panel->_width; x++) {
+				if (get(x, y) == PATH) {
+					row += "xx";
+				}
+				else row += "  ";
 			}
-			else row += "    ";
+			solution.push_back(row);
+			std::cout << row << std::endl;
 		}
-		solution.push_back(row);
+		std::cout << std::endl;
 	}
 
 	//Attempt to add the symbols

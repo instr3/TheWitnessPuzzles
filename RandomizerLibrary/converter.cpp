@@ -64,21 +64,21 @@ Json exportSymbol(int symbol)
 			{"rotation",(symbol & Decoration::Can_Rotate) ? 1 : 0},{"shape",symbol >> 16} };
 	else if (decoration_type == Decoration::Triangle)
 	{
-		if ((symbol & Decoration::Triangle1) == Decoration::Triangle1)
-			return Json{ {"type","triangle"},{"color",exportColor(symbol)},{"number",1 } };
+		if ((symbol & Decoration::Triangle3) == Decoration::Triangle3)
+			return Json{ {"type","triangle"},{"color",exportColor(symbol)},{"number",3 } };
 		else if ((symbol & Decoration::Triangle2) == Decoration::Triangle2)
 			return Json{ {"type","triangle"},{"color",exportColor(symbol)},{"number",2 } };
-		else if ((symbol & Decoration::Triangle3) == Decoration::Triangle3)
-			return Json{ {"type","triangle"},{"color",exportColor(symbol)},{"number",3 } };
+		else if ((symbol & Decoration::Triangle1) == Decoration::Triangle1)
+			return Json{ {"type","triangle"},{"color",exportColor(symbol)},{"number",1 } };
 	}
 	else if (decoration_type == Decoration::Arrow)
 	{
-		if ((symbol & Decoration::Arrow1) == Decoration::Arrow1)
-			return Json{ {"type","arrow"},{"color",exportColor(symbol)},{"number",1 } };
+		if ((symbol & Decoration::Arrow3) == Decoration::Arrow3)
+			return Json{ {"type","arrow"},{"color",exportColor(symbol)},{"number",3 } };
 		else if ((symbol & Decoration::Arrow2) == Decoration::Arrow2)
 			return Json{ {"type","arrow"},{"color",exportColor(symbol)},{"number",2 } };
-		else if ((symbol & Decoration::Arrow3) == Decoration::Arrow3)
-			return Json{ {"type","arrow"},{"color",exportColor(symbol)},{"number",3 } };
+		else if ((symbol & Decoration::Arrow1) == Decoration::Arrow1)
+			return Json{ {"type","arrow"},{"color",exportColor(symbol)},{"number",1 } };
 	}
 	else if ((symbol & Decoration::Dot) == Decoration::Dot)
 		return Json{ {"type","dot"},{"color",exportColor(symbol)} };
@@ -156,6 +156,23 @@ bool withP(double threshold)
 	return num < threshold;
 }
 
+int selectP(double t1, int v1, double t2, int v2, int v3)
+{
+	double num = rand() % 1000 / 1000.;
+	if (num < t1) return v1;
+	if (num - t1 < t2) return v2;
+	return v3;
+}
+
+int selectP(double t1, int v1, double t2, int v2, double t3, int v3, int v4)
+{
+	double num = rand() % 1000 / 1000.;
+	if (num < t1) return v1;
+	if (num - t1 < t2) return v2;
+	if (num - t1 - t2 < t3) return v3;
+	return v4;
+}
+
 int randomInt(int low, int high)
 {
 	return rand() % (high - low + 1) + low;
@@ -201,7 +218,7 @@ void RandomAssignColor(std::vector<std::pair<int,int> > &symbols, int type, int 
 		}
 	}
 }
-void Generate::generateRandom(int seed)
+void Generate::generateRandom(int seed, bool debug)
 {
 	this->seed(seed);
 	while (true)
@@ -241,9 +258,19 @@ void Generate::generateRandom(int seed)
 			else typeCount = 4;
 			int currentTypeCount = typeCount;
 			// Starts
-			startCount = 1;
+			// startCount = withP(0.8) ? 1 : withP(0.85) ? 2 : 3;
+			startCount = selectP(0.7, 1, 0.2, 2, 0.18, 3, 4);
 			//Ends
-			endCount = 1;
+			endCount = selectP(0.75, 1, 0.16, 2, 0.08, 3, 4);
+
+			if (!fullDot)
+			{
+				if (withP(0.01))
+					this->setFlag(Generate::ShortPath);
+				else if (withP(0.05))
+					this->setFlag(Generate::LongPath);
+			}
+
 			// Squares
 			if (withP(currentTypeCount / 6.0))
 			{
@@ -341,7 +368,8 @@ void Generate::generateRandom(int seed)
 			RandomAssignColor(symbols, Decoration::Triangle, triangleCount, colors, colorCount);
 			if (dotCount > 0) symbols.push_back(std::make_pair(Decoration::Dot_Intersection, dotCount));
 
-			if (generate(0, PuzzleSymbols(symbols))) return;
+			if (generate(0, PuzzleSymbols(symbols), debug))
+				return;
 			failedCount += 1;
 			if (failedCount >= 50)
 				break;

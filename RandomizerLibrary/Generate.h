@@ -34,7 +34,7 @@ public:
 		DisableReset = 0x40000000, MountainFloorH = 0x80000000
 	};
 	
-	void generate(int id) { PuzzleSymbols symbols({ }); while (!generate(id, symbols)); }
+	void generate(int id) { PuzzleSymbols symbols({ }); while (!generate(id, symbols, false)); }
 	void generate(int id, int symbol, int amount);
 	void generate(int id, int symbol1, int amount1, int symbol2, int amount2);
 	void generate(int id, int symbol1, int amount1, int symbol2, int amount2, int symbol3, int amount3);
@@ -45,7 +45,7 @@ public:
 	void generate(int id, int symbol1, int amount1, int symbol2, int amount2, int symbol3, int amount3, int symbol4, int amount4, int symbol5, int amount5, int symbol6, int amount6, int symbol7, int amount7, int symbol8, int amount8);
 	void generate(int id, int symbol1, int amount1, int symbol2, int amount2, int symbol3, int amount3, int symbol4, int amount4, int symbol5, int amount5, int symbol6, int amount6, int symbol7, int amount7, int symbol8, int amount8, int symbol9, int amount9);
 	void generate(int id, std::vector<std::pair<int, int>> symbolVec);
-	void generateRandom(int seed);
+	void generateRandom(int seed, bool debug);
 	// void generateMulti(int id, std::vector<std::shared_ptr<Generate>> gens, std::vector<std::pair<int, int>> symbolVec);
 	// void generateMulti(int id, int numSolutions, std::vector<std::pair<int, int>> symbolVec);
 	void generateMaze(int id);
@@ -104,7 +104,7 @@ private:
 	bool off_edge(Point p) { return (p.first < 0 || p.first >= _panel->_width || p.second < 0 || p.second >= _panel->_height); }
 	static std::vector<Point> _DIRECTIONS1, _8DIRECTIONS1, _DIRECTIONS2, _8DIRECTIONS2, _SHAPEDIRECTIONS, _DISCONNECT;
 	bool generate_maze(int id, int numStarts, int numExits);
-	bool generate(int id, PuzzleSymbols symbols); //************************************************************
+	bool generate(int id, PuzzleSymbols symbols, bool debug); //************************************************************
 	bool place_all_symbols(PuzzleSymbols& symbols);
 	bool generate_path(PuzzleSymbols& symbols);
 	bool generate_path_length(int minLength);
