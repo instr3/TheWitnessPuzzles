@@ -24,17 +24,32 @@ namespace TheWitnessPuzzles
         public bool SetState(NodeState state)
         {
             // Node can not be exit node if it's not on the border of panel (has 2 or 3 edges)
-            if (state == NodeState.Exit && _edges.Count >= 4)
+            if (state.HasFlag(NodeState.Exit) && _edges.Count >= 4)
                 return false;
 
             State = state;
             return true;
         }
 
+
+        public bool AddState(NodeState state)
+        {
+            // Node can not be exit node if it's not on the border of panel (has 2 or 3 edges)
+            if (state.HasFlag(NodeState.Exit) && _edges.Count >= 4)
+                return false;
+
+            State |= state;
+            return true;
+        }
         public bool SetStateAndColor(NodeState state, Color color)
         {
             Color = color;
             return SetState(state);
+        }
+        public bool AddStateAndColor(NodeState state, Color color)
+        {
+            Color = color;
+            return AddState(state);
         }
 
         public override string ToString() => $"[{Id}]";

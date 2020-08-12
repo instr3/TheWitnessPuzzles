@@ -422,7 +422,7 @@ namespace TheWitnessPuzzles
             // Retrieve eliminated nodes, we don't need to check them
             var eliminatedNodes = eliminatedParts.OfType<Node>();
 
-            var markedNodes = Blocks.SelectMany(x => x.Nodes).Distinct().Where(x => x.State == NodeState.Marked).Except(eliminatedNodes);
+            var markedNodes = Blocks.SelectMany(x => x.Nodes).Distinct().Where(x => x.State.HasFlag(NodeState.Marked)).Except(eliminatedNodes);
 
             // Two lines panel, we should take colored dots into account
             if (Panel is SymmetryPuzzle symPanel)

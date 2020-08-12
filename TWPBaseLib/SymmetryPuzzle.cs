@@ -152,13 +152,13 @@ namespace TheWitnessPuzzles
         protected override IEnumerable<Node> GAPL_GetEndNodes()
         {
             var main = base.GAPL_GetEndNodes();
-            return main.Where(x => GetMirrorNode(x).State == NodeState.Exit);
+            return main.Where(x => GetMirrorNode(x).State.HasFlag(NodeState.Exit));
         }
 
         protected override void GAPL_AddStartNodes(List<List<Node>> solutions, IEnumerable<Node> startNodes)
         {
             // Remove start nodes that do not have mirrored start node
-            var nodesWithMirroredStart = startNodes.Where(x => GetMirrorNode(x).State == NodeState.Start);
+            var nodesWithMirroredStart = startNodes.Where(x => GetMirrorNode(x).State.HasFlag(NodeState.Start));
             base.GAPL_AddStartNodes(solutions, nodesWithMirroredStart);
             // Add mirrored starts to mirrored solutions
             foreach (var line in solutions)

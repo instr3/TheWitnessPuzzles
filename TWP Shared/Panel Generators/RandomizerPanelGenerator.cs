@@ -74,11 +74,11 @@ namespace TWP_Shared
                 int rawP = rawX * rawHeight + rawY;
                 string type = jsonGrid[rawP]["type"].ToString();
                 if (jsonGrid[rawP]["start"] != null)
-                    puzzle.Nodes[i].SetState(NodeState.Start); // TODO: start and end on the same point?
+                    puzzle.Nodes[i].AddState(NodeState.Start); // TODO: start and end on the same point?
                 if (jsonGrid[rawP]["end"] != null)
-                    puzzle.Nodes[i].SetState(NodeState.Exit); // TODO: start and mark on the same point?
+                    puzzle.Nodes[i].AddState(NodeState.Exit); // TODO: start and mark on the same point?
                 if (type == "dot")
-                    puzzle.Nodes[i].SetState(NodeState.Marked);
+                    puzzle.Nodes[i].AddState(NodeState.Marked);
             }
             for(int j=0;j<puzzle.Edges.Count;++j)
             {

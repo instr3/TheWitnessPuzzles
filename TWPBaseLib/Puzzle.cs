@@ -416,7 +416,7 @@ namespace TheWitnessPuzzles
                 GAPL_AddStartNodes(solutions, new Node[] { startNode });
             else
                 // Initiate one line from every start node
-                GAPL_AddStartNodes(solutions, Nodes.Where(x => x.State == NodeState.Start));
+                GAPL_AddStartNodes(solutions, Nodes.Where(x => x.State.HasFlag(NodeState.Start)));
 
             // Loop until all lines will get to the exit nodes
             bool allFinished = false;
@@ -458,7 +458,7 @@ namespace TheWitnessPuzzles
             return finishedSolutions.Select(x => x.Select(z => z.Id).ToList()).ToList();
         }
         
-        protected virtual IEnumerable<Node> GAPL_GetEndNodes() => Nodes.Where(x => x.State == NodeState.Exit);
+        protected virtual IEnumerable<Node> GAPL_GetEndNodes() => Nodes.Where(x => x.State.HasFlag(NodeState.Exit));
         protected virtual void GAPL_AddStartNodes(List<List<Node>> solutions, IEnumerable<Node> startNodes)
         {
             foreach (var start in startNodes)

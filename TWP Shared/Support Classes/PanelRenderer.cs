@@ -175,11 +175,11 @@ namespace TWP_Shared
                 // Returns a coef k: Puzzle size in pixels * k = line width in pixels
                 float LineSizeRatio(float puzzleDimension) => -0.0064f * puzzleDimension + 0.0859f;
 
-                IEnumerable<Point> GetStartNodes() => panel.Nodes.Where(x => x.State == NodeState.Start).Select(x => NodeIdToPoint(x.Id));
+                IEnumerable<Point> GetStartNodes() => panel.Nodes.Where(x => x.State.HasFlag(NodeState.Start)).Select(x => NodeIdToPoint(x.Id));
                 IEnumerable<Point> GetEndNodesTop()
                 {
                     for (int i = 1; i < panel.Width; i++)
-                        if (panel.Nodes[i].State == NodeState.Exit)
+                        if (panel.Nodes[i].State.HasFlag(NodeState.Exit))
                             yield return new Point(i, 0);
                 }
                 IEnumerable<Point> GetEndNodesBot()
@@ -187,7 +187,7 @@ namespace TWP_Shared
                     for (int i = 1; i < panel.Width; i++)
                     {
                         int index = panel.Height * (panel.Width + 1) + i;
-                        if (panel.Nodes[index].State == NodeState.Exit)
+                        if (panel.Nodes[index].State.HasFlag(NodeState.Exit))
                             yield return new Point(i, panel.Height);
                     }
                 }
@@ -196,7 +196,7 @@ namespace TWP_Shared
                     for (int j = 0; j < panel.Height + 1; j++)
                     {
                         int index = j * (panel.Width + 1);
-                        if (panel.Nodes[index].State == NodeState.Exit)
+                        if (panel.Nodes[index].State.HasFlag(NodeState.Exit))
                             yield return new Point(0, j);
                     }
                 }
@@ -205,7 +205,7 @@ namespace TWP_Shared
                     for (int j = 0; j < panel.Height + 1; j++)
                     {
                         int index = j * (panel.Width + 1) + panel.Width;
-                        if (panel.Nodes[index].State == NodeState.Exit)
+                        if (panel.Nodes[index].State.HasFlag(NodeState.Exit))
                             yield return new Point(panel.Width, j);
                     }
                 }
@@ -357,13 +357,13 @@ namespace TWP_Shared
 
         private void DrawRoundedCorners(SpriteBatch spriteBatch)
         {
-            if (panel.TopLeftNode.State != NodeState.Exit)
+            if (!panel.TopLeftNode.State.HasFlag(NodeState.Exit))
                 spriteBatch.Draw(texCorner, new Rectangle(PuzzleConfig.Location, LineWidthPoint), null, WallColor, 0, Vector2.Zero, SpriteEffects.None, 0);
-            if (panel.TopRightNode.State != NodeState.Exit)
+            if (!panel.TopRightNode.State.HasFlag(NodeState.Exit))
                 spriteBatch.Draw(texCorner, new Rectangle(PuzzleConfig.Location + new Point(PuzzleConfig.Width - LineWidth, 0), LineWidthPoint), null, WallColor, 0, Vector2.Zero, SpriteEffects.FlipHorizontally, 0);
-            if (panel.BottomLeftNode.State != NodeState.Exit)
+            if (!panel.BottomLeftNode.State.HasFlag(NodeState.Exit))
                 spriteBatch.Draw(texCorner, new Rectangle(PuzzleConfig.Location + new Point(0, PuzzleConfig.Height - LineWidth), LineWidthPoint), null, WallColor, 0, Vector2.Zero, SpriteEffects.FlipVertically, 0);
-            if (panel.BottomRightNode.State != NodeState.Exit)
+            if (!panel.BottomRightNode.State.HasFlag(NodeState.Exit))
                 spriteBatch.Draw(texCorner, new Rectangle(PuzzleConfig.Location + PuzzleConfig.Size - LineWidthPoint, LineWidthPoint), null, WallColor, 0, Vector2.Zero, SpriteEffects.FlipHorizontally | SpriteEffects.FlipVertically, 0);
         }
         private void DrawBorders(SpriteBatch spriteBatch)
@@ -398,7 +398,7 @@ namespace TWP_Shared
         }
         private void DrawMarkedNodes(SpriteBatch spriteBatch, IEnumerable<Node> allNodes, Color? fillColor = null)
         {
-            var markedNodes = allNodes.Where(x => x.State == NodeState.Marked);
+            var markedNodes = allNodes.Where(x => x.State.HasFlag(NodeState.Marked));
             foreach (var node in markedNodes)
             {
                 Point position = NodeIdToPoint(node.Id).Multiply(NodePadding) + PuzzleConfig.Location;

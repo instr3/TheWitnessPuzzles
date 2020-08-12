@@ -195,19 +195,19 @@ namespace TWP_Shared
                         br.Write(panel.ButtonsColor.PackedValue);           // uint
 
                         // Start nodes
-                        List<Node> startNodes = panel.Nodes.Where(x => x.State == NodeState.Start).ToList();
+                        List<Node> startNodes = panel.Nodes.Where(x => x.State.HasFlag(NodeState.Start)).ToList();
                         br.Write(startNodes.Count);                         // int
                         foreach (var start in startNodes)
                             br.Write(start.Id);                             // int
 
                         // End nodes
-                        List<Node> endNodes = panel.Nodes.Where(x => x.State == NodeState.Exit).ToList();
+                        List<Node> endNodes = panel.Nodes.Where(x => x.State.HasFlag(NodeState.Exit)).ToList();
                         br.Write(endNodes.Count);                           // int
                         foreach (var end in endNodes)
                             br.Write(end.Id);
 
                         // Marked nodes
-                        List<Node> markedNodes = panel.Nodes.Where(x => x.State == NodeState.Marked).ToList();
+                        List<Node> markedNodes = panel.Nodes.Where(x => x.State.HasFlag(NodeState.Marked)).ToList();
                         br.Write(markedNodes.Count);                        // int
                         foreach (var node in markedNodes)
                         {
@@ -350,12 +350,12 @@ namespace TWP_Shared
                             // Start nodes
                             int startNodesCount = br.ReadInt32();
                             for (int i = 0; i < startNodesCount; i++)
-                                panel.Nodes[br.ReadInt32()].SetState(NodeState.Start);
+                                panel.Nodes[br.ReadInt32()].AddState(NodeState.Start);
 
                             // End nodes
                             int endNodesCount = br.ReadInt32();
                             for (int i = 0; i < endNodesCount; i++)
-                                panel.Nodes[br.ReadInt32()].SetState(NodeState.Exit);
+                                panel.Nodes[br.ReadInt32()].AddState(NodeState.Exit);
 
                             // Marked nodes
                             int markedNodesCount = br.ReadInt32();
@@ -363,9 +363,9 @@ namespace TWP_Shared
                             {
                                 int nodeID = br.ReadInt32();
                                 if (br.ReadBoolean())
-                                    panel.Nodes[nodeID].SetStateAndColor(NodeState.Marked, new Color(br.ReadUInt32()));
+                                    panel.Nodes[nodeID].AddStateAndColor(NodeState.Marked, new Color(br.ReadUInt32()));
                                 else
-                                    panel.Nodes[nodeID].SetState(NodeState.Marked);
+                                    panel.Nodes[nodeID].AddState(NodeState.Marked);
                             }
 
                             // Broken edges
