@@ -34,8 +34,6 @@ namespace TWP_Shared
             prevMouse = Mouse.GetState();
             prevKB = Keyboard.GetState();
 
-            if (mouseLocked && IsFocused)
-                ResetMouseToCenter();
         }
         private static IEnumerable<GestureSample> GetGestures()
         {
@@ -84,6 +82,7 @@ namespace TWP_Shared
                     Point center = Game.Window.ClientBounds.Center - Game.Window.ClientBounds.Location;
                     Point mousePos = Mouse.GetState().Position;
                     result += (mousePos - center).ToVector2();
+                    ResetMouseToCenter();
                 }
             }
 
