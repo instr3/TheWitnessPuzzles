@@ -15,7 +15,7 @@ namespace TWP_Shared
         {
             binds = new Dictionary<Type, object>();
 
-            binds.Add(typeof(PanelGenerator), ReversePanelGenerator.Instance);
+            binds.Add(typeof(PanelGenerator), RandomizerPanelGenerator.Instance);
         }
 
         public static T Get<T>()

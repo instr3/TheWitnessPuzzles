@@ -17,6 +17,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)GUI Elements\TabButton.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GUI Elements\ToggleButton.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GUI Elements\TwoStateButton.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Panel Generators\RandomizerPanelGenerator.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Support Classes\ColorPalettesLibrary.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Support Classes\DependencyInjector.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GameScreens\EditorGameScreen.cs" />
@@ -50,6 +51,5 @@
     <Folder Include="$(MSBuildThisFileDirectory)BloomFX\" />
     <Folder Include="$(MSBuildThisFileDirectory)GameScreens\PanelScreen\" />
     <Folder Include="$(MSBuildThisFileDirectory)Animations\" />
-    <Folder Include="$(MSBuildThisFileDirectory)Panel Generators\" />
   </ItemGroup>
 </Project>
