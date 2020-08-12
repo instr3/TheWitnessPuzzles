@@ -123,7 +123,7 @@ namespace TWP_Shared
                 spriteBatch.Begin();
 
                 string firstLine = "The Witness";
-                string secondLine = "Puzzles";
+                string secondLine = "Puzzles x RPG";
 
                 Vector2 firstLineSize = font.MeasureString(firstLine);
                 Vector2 secondLineSize = font.MeasureString(secondLine);

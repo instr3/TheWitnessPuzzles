@@ -23,7 +23,7 @@ std::string exportSymmetry(Panel::Symmetry symmetry)
 	}
 }
 
-Json exportColor(int symbol)
+const char* exportColor(int symbol)
 {
 	int color = symbol & 0xf;
 	if (color == Decoration::Black)
@@ -48,6 +48,16 @@ Json exportColor(int symbol)
 		return "orange";
 	else
 		return "";
+}
+
+const char* exportDotColor(int symbol)
+{
+	if ((symbol & IntersectionFlags::DOT_IS_BLUE) == IntersectionFlags::DOT_IS_BLUE)
+		return "first";
+	else if ((symbol & IntersectionFlags::DOT_IS_ORANGE) == IntersectionFlags::DOT_IS_ORANGE)
+		return "second";
+	else
+		return "black";
 }
 
 Json exportSymbol(int symbol)
@@ -81,7 +91,7 @@ Json exportSymbol(int symbol)
 			return Json{ {"type","arrow"},{"color",exportColor(symbol)},{"number",1 } };
 	}
 	else if ((symbol & Decoration::Dot) == Decoration::Dot)
-		return Json{ {"type","dot"},{"color",exportColor(symbol)} };
+		return Json{ {"type","dot"},{"color", "black"} };
 	else if ((symbol & Decoration::Gap) == Decoration::Gap)
 		return Json{ {"type","gap"} };
 	return Json{ {"type","empty"} };
@@ -93,7 +103,10 @@ Json exportGrid(std::vector<std::vector<int> > grid, int height, int width, std:
 	std::vector<Json> result = std::vector<Json>();
 	for (int x = 0; x < width; x++) {
 		for (int y = 0; y < height; y++) {
-			result.push_back(exportSymbol(grid[x][y]));
+			if ((grid[x][y] & 0x700) > 0 && (x % 2 == 0 || (y % 2 == 0)))
+				result.push_back(Json{ {"type","dot"},{"color",exportDotColor(grid[x][y])} });
+			else
+				result.push_back(exportSymbol(grid[x][y]));
 		}
 	}
 	for (Point point : startPoints)
@@ -144,10 +157,15 @@ PuzzleSymbols Generate::importPanelSetting(std::string json_string)
 }
 
 
-int randomSize()
+int randomSize(int symmetry)
 {
 	double num = rand() % 100 / 100.0;
-	return num > 0.05 ? (num > 0.3 ? (num > 0.75 ? (num > 0.9 ? 6 : 5) : 4) : 3) : 2;
+	if (symmetry == -1)
+		return num > 0.3 ? (num > 0.33 ? (num > 0.87 ? (num > 0.9 ? 7 : 6) : 5) : 4) : 3;
+	else if(symmetry>0)
+		return num > 0.3 ? (num > 0.75 ? (num > 0.87 ? (num > 0.9 ? 7 : 6) : 5) : 4) : 3;
+	else
+		return num > 0.05 ? (num > 0.3 ? (num > 0.75 ? (num > 0.9 ? 6 : 5) : 4) : 3) : 2;
 }
 
 bool withP(double threshold)
@@ -199,6 +217,7 @@ void randomColor(int* colors, int colorCount)
 }
 
 const int MAX_COLORS = 5;
+int dotColors[] = { Decoration::Color::Black,Decoration::Color::Blue,Decoration::Color::Yellow };
 void RandomAssignColor(std::vector<std::pair<int,int> > &symbols, int type, int totalCount, int *colors, int colorCount, int forceColor=-1)
 {
 	if (totalCount > 0)
@@ -223,10 +242,11 @@ void Generate::generateRandom(int seed, bool debug)
 	this->seed(seed);
 	while (true)
 	{
-		int width = randomSize(), height;
-		if (withP(0.5)) height = width; else height = randomSize();
 		bool fullDot = withP(0.1);
 		bool forcePolyColor = withP(0.8);
+		int symmetry = fullDot ? 0 : selectP(0.7, 0, 0.15, 1, 2);
+		int width = randomSize(symmetry == 2 ? -1 : symmetry), height;
+		if (withP(0.5)) height = width; else height = randomSize(symmetry);
 		int colors[MAX_COLORS];
 		int sqrtArea = int(round(sqrt(width * height)));
 		int startCount;
@@ -246,6 +266,10 @@ void Generate::generateRandom(int seed, bool debug)
 		{
 			this->resetConfig();
 			this->setGridSize(width, height);
+			if (symmetry == 2)
+				this->setSymmetry(Panel::Symmetry::Vertical);
+			else if (symmetry == 1)
+				this->setSymmetry(Panel::Symmetry::Rotational);
 			estimatedComplexity = fullDot ? 100 : 10;
 			if (withP(fullDot ? 0.7 : 0.3)) colorCount = 1;
 			else if (withP(0.6)) colorCount = 2;
@@ -300,21 +324,8 @@ void Generate::generateRandom(int seed, bool debug)
 					this->setFlag(Generate::FalseParity);
 			}
 			else eliminatorCount = 0;
-			// Dot
-			if (withP(currentTypeCount / 3.0))
-			{
-				if (fullDot) continue;
-				currentTypeCount -= 1;
-				if (withP(0.5)) dotCount = randomInt(1, sqrtArea);
-				else if (withP(0.8)) dotCount = randomInt(1, 2 * sqrtArea);
-				else dotCount = randomInt(1, 3 * sqrtArea);
-				if (dotCount > (width + 1) * (height + 1))
-					continue;
-			}
-			else dotCount = 0;
-			if (fullDot) dotCount = (width + 1) * (height + 1);
 			// Poly
-			if (withP(currentTypeCount / 2.0))
+			if (withP(currentTypeCount / 3.0))
 			{
 				currentTypeCount -= 1;
 				if (withP(0.9)) polyCount = randomInt(1, sqrtArea);
@@ -343,13 +354,27 @@ void Generate::generateRandom(int seed, bool debug)
 				polyCount = 0; ylopCount = 0;
 			}
 			// Triangle
-			if (withP(currentTypeCount / 1.0))
+			if (withP(currentTypeCount / 2.0))
 			{
 				currentTypeCount -= 1;
 				if (withP(0.9)) triangleCount = randomInt(1, sqrtArea);
 				else triangleCount = randomInt(1, 2 * sqrtArea);
 			}
 			else triangleCount = 0;
+			// Dot
+			if (withP(currentTypeCount / 1.0) || (symmetry && withP(0.5)))
+			{
+				if (fullDot) continue;
+					currentTypeCount -= 1;
+					if (withP(0.5)) dotCount = randomInt(1, sqrtArea);
+					else if (withP(0.8)) dotCount = randomInt(1, 2 * sqrtArea);
+					else dotCount = randomInt(1, 3 * sqrtArea);
+					if (dotCount > (width + 1) * (height + 1))
+						continue;
+			}
+			else dotCount = 0;
+				if (fullDot) dotCount = (width + 1) * (height + 1);
+			// End of elements
 			if (triangleCount + ylopCount + polyCount + squareCount + starCount + eliminatorCount > width * height)
 				continue;
 			int score = triangleCount * 3 + ylopCount * 6 + polyCount * 5 + squareCount * 2 + starCount * 3 + eliminatorCount * 5 + (dotCount * 3 + 1) / 4;
@@ -366,7 +391,11 @@ void Generate::generateRandom(int seed, bool debug)
 			RandomAssignColor(symbols, Decoration::Poly, polyCount, colors, colorCount, forcePolyColor ? 0 : -1);
 			RandomAssignColor(symbols, Decoration::Poly | Decoration::Negative, ylopCount, colors, colorCount, forcePolyColor ? 1 : -1);
 			RandomAssignColor(symbols, Decoration::Triangle, triangleCount, colors, colorCount);
-			if (dotCount > 0) symbols.push_back(std::make_pair(Decoration::Dot_Intersection, dotCount));
+			if (fullDot) symbols.push_back(std::make_pair(Decoration::Dot_Intersection | Decoration::Color::Black, dotCount));
+			else if (dotCount > 0)
+			{
+				RandomAssignColor(symbols, Decoration::Dot, dotCount, dotColors, 3, symmetry ? -1 : 0);
+			}
 
 			if (generate(0, PuzzleSymbols(symbols), debug))
 				return;

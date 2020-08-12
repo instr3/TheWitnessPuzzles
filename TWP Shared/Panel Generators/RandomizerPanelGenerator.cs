@@ -59,9 +59,22 @@ namespace TWP_Shared
             JObject json = JObject.Parse(jsonString);
             int rawWidth = json["width"].ToObject<int>();
             int rawHeight = json["height"].ToObject<int>();
-            Puzzle puzzle = new Puzzle(rawWidth / 2, rawHeight / 2,
-                panelPalette.SingleLineColor, panelPalette.BackgroundColor,
-                panelPalette.WallsColor, panelPalette.ButtonsColor, seed);
+            string symmetry = json["symmetry"].ToString();
+            Puzzle puzzle;
+            if (symmetry == "none")
+            {
+                puzzle = new Puzzle(rawWidth / 2, rawHeight / 2,
+                    panelPalette.SingleLineColor, panelPalette.BackgroundColor,
+                    panelPalette.WallsColor, panelPalette.ButtonsColor, seed);
+            }
+            else if (symmetry == "vertical" || symmetry == "rotational")
+            {
+                puzzle = new SymmetryPuzzle(rawWidth / 2, rawHeight / 2,
+                    symmetry == "rotational", false, panelPalette.MainLineColor, panelPalette.MirrorLineColor,
+                    panelPalette.BackgroundColor, panelPalette.WallsColor, panelPalette.ButtonsColor, seed);
+
+            }
+            else throw new Exception("Unsupported symmetry "+symmetry);
             JArray jsonGrid = json["grid"] as JArray;
             int p = 0;
             for (int x = 0; x < rawWidth; ++x)
@@ -82,7 +95,14 @@ namespace TWP_Shared
                 if (jsonGrid[rawP]["end"] != null)
                     puzzle.Nodes[i].AddState(NodeState.Exit); // TODO: start and mark on the same point?
                 if (type == "dot")
-                    puzzle.Nodes[i].AddState(NodeState.Marked);
+                {
+                    string color = jsonGrid[rawP]["color"].ToString();
+                    if (color != "black")
+                        puzzle.Nodes[i].AddStateAndColor(NodeState.Marked, color == "first" ? panelPalette.MainLineColor : panelPalette.MirrorLineColor);
+                    else
+                        puzzle.Nodes[i].AddState(NodeState.Marked);
+
+                }
             }
             for(int j=0;j<puzzle.Edges.Count;++j)
             {
@@ -96,7 +116,13 @@ namespace TWP_Shared
                 if (type == "gap")
                     edge.SetState(EdgeState.Broken); // TODO: start and end?
                 if (type == "dot")
-                    edge.SetState(EdgeState.Marked);
+                {
+                    string color = jsonGrid[rawP]["color"].ToString();
+                    if (color != "black")
+                        edge.SetStateAndColor(EdgeState.Marked, color == "first" ? panelPalette.MainLineColor : panelPalette.MirrorLineColor);
+                    else
+                        edge.SetState(EdgeState.Marked);
+                }
             }
             foreach(Block block in puzzle.Blocks)
             {

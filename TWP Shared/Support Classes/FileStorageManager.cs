@@ -12,14 +12,14 @@ namespace TWP_Shared
 {
     public static class FileStorageManager
     {
-        private static readonly string SETTINGS_FILE = "settings.cfg";
-        private static readonly string CURRENT_PANEL_FILE = "current.panel";
-        private static readonly string SOLVED_DIR = "lastSolved";
-        private static readonly string DISCARDED_DIR = "lastDiscarded";
-        private static readonly string FAVOURITE_DIR = "favourite";
-        private static readonly string SOLVED_PANEL_FILE = "solved{0}_{1}.panel";
-        private static readonly string DISCARDED_PANEL_FILE = "discarded{0}_{1}.panel";
-        private static readonly string FAVOURITE_PANEL_FILE = "fav{0}_{1}.panel";
+        private static readonly string SETTINGS_FILE = "randomizer-settings.cfg";
+        private static readonly string CURRENT_PANEL_FILE = "randomizer-current.panel";
+        private static readonly string SOLVED_DIR = "randomizer-lastSolved";
+        private static readonly string DISCARDED_DIR = "randomizer-lastDiscarded";
+        private static readonly string FAVOURITE_DIR = "randomizer-favourite";
+        private static readonly string SOLVED_PANEL_FILE = "randomizer-solved{0}_{1}.panel";
+        private static readonly string DISCARDED_PANEL_FILE = "randomizer-discarded{0}_{1}.panel";
+        private static readonly string FAVOURITE_PANEL_FILE = "randomizer-fav{0}_{1}.panel";
 
         private static readonly Regex ExtractSeedFromName = new Regex(@"(?<=_).+(?=\.panel)");
         private static readonly Regex ExtractNumberFromName = new Regex(@"\d+(?=_)");

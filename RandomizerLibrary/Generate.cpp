@@ -280,8 +280,8 @@ bool Generate::generate_maze(int id, int numStarts, int numExits)
 {
 	initPanel(id);
 
-	if (numStarts > 0) place_start(numStarts);
-	if (numExits > 0) place_exit(numExits);
+	if (numStarts > 0) if (!place_start(numStarts)) return false;
+	if (numExits > 0) if (!place_exit(numExits)) return false;
 
 	//Prevent start and exit from overlapping, except in one one particular puzzle (0x00083).
 	if (id == 0x00083 && _width == 15 && _height == 15) {
@@ -420,8 +420,8 @@ bool Generate::generate(int id, PuzzleSymbols symbols, bool debug=false)
 			!symbols.any(Decoration::Exit) ? get_parity(pick_random(_exits)) : rand() % 2)) % 2;
 	else _parity = -1; //-1 indicates a non-full dot puzzle
 
-	if (symbols.any(Decoration::Start)) place_start(symbols.getNum(Decoration::Start));
-	if (symbols.any(Decoration::Exit)) place_exit(symbols.getNum(Decoration::Exit));
+	if (symbols.any(Decoration::Start)) if (!place_start(symbols.getNum(Decoration::Start))) return false;
+	if (symbols.any(Decoration::Exit)) if (!place_exit(symbols.getNum(Decoration::Exit))) return false;
 
 	//Make a random path unless a fixed one has been defined
 	if (customPath.size() == 0) {
@@ -820,7 +820,10 @@ bool Generate::place_start(int amount)
 {
 	_starts.clear();
 	_panel->_startpoints.clear();
+	int placeCount = 0;
 	while (amount > 0) {
+		if (placeCount++ > 1000)
+			return false;
 		Point pos = Point(rand() % (_panel->_width / 2 + 1) * 2, rand() % (_panel->_height / 2 + 1) * 2);
 		if (hasFlag(Config::StartEdgeOnly))
 		switch (rand() % 4) {
@@ -858,7 +861,10 @@ bool Generate::place_exit(int amount)
 {
 	_exits.clear();
 	_panel->_endpoints.clear();
+	int placeCount = 0;
 	while (amount > 0) {
+		if (placeCount++ > 1000)
+			return false;
 		Point pos = Point(rand() % (_panel->_width / 2 + 1) * 2, rand() % (_panel->_height / 2 + 1) * 2);
 		switch (rand() % 4) {
 		case 0: pos.first = 0; break;
