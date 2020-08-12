@@ -45,6 +45,7 @@ public:
 	void generate(int id, int symbol1, int amount1, int symbol2, int amount2, int symbol3, int amount3, int symbol4, int amount4, int symbol5, int amount5, int symbol6, int amount6, int symbol7, int amount7, int symbol8, int amount8);
 	void generate(int id, int symbol1, int amount1, int symbol2, int amount2, int symbol3, int amount3, int symbol4, int amount4, int symbol5, int amount5, int symbol6, int amount6, int symbol7, int amount7, int symbol8, int amount8, int symbol9, int amount9);
 	void generate(int id, std::vector<std::pair<int, int>> symbolVec);
+	void generateRandom(int seed);
 	// void generateMulti(int id, std::vector<std::shared_ptr<Generate>> gens, std::vector<std::pair<int, int>> symbolVec);
 	// void generateMulti(int id, int numSolutions, std::vector<std::pair<int, int>> symbolVec);
 	void generateMaze(int id);

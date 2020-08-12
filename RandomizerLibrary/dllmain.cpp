@@ -19,14 +19,28 @@ BOOL APIENTRY DllMain( HMODULE hModule,
     return TRUE;
 }
 
-extern "C" __declspec(dllexport) const char* __cdecl GenerateSamplePuzzle()
+
+
+extern "C" __declspec(dllexport) const char* __cdecl GenerateRandomPuzzle(int seed)
 {
 	Generate* generator = new Generate();
 	generator->initPanel(0);
 	generator->resetConfig();
+	generator->generateRandom(seed);
+	outputString = generator->exportPanel();
+	delete generator;
+	return outputString.c_str();
+}
+
+extern "C" __declspec(dllexport) const char* __cdecl GenerateSamplePuzzle()
+{
+	Generate* generator = new Generate();
+	generator->seed(1);
+	generator->initPanel(0);
+	generator->resetConfig();
 	generator->setGridSize(4, 4);
 	// generator->generate(0, Decoration::Start, 1, Decoration::Exit, 1, Decoration::Dot_Intersection, 25, Decoration::Gap, 4);
-	generator->generate(0, Decoration::Start, 2, Decoration::Exit, 2, Decoration::Dot_Intersection, 25, Decoration::Triangle2 | Decoration::Magenta, 4);
+	generator->generate(0, Decoration::Start, 1, Decoration::Exit, 1, Decoration::Dot_Intersection, 25, Decoration::Poly | Decoration::Magenta, 2);
 	outputString = generator->exportPanel();
 	// outputBuffer = new char[result.length() + 1];
 	// strcpy_s(outputBuffer, result.length() + 1, generator->exportPanel().c_str());

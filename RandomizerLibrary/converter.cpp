@@ -61,7 +61,7 @@ Json exportSymbol(int symbol)
 		return Json{ {"type","eraser"},{"color",exportColor(symbol)} };
 	else if (decoration_type == Decoration::Poly)
 		return Json{ {"type",(symbol & Decoration::Negative) ? "ylop" : "poly"},{"color",exportColor(symbol)},
-			{"rotation",(symbol & Decoration::Can_Rotate) ? 1 : 0} };
+			{"rotation",(symbol & Decoration::Can_Rotate) ? 1 : 0},{"shape",symbol >> 16} };
 	else if (decoration_type == Decoration::Triangle)
 	{
 		if ((symbol & Decoration::Triangle1) == Decoration::Triangle1)
@@ -141,4 +141,210 @@ PuzzleSymbols Generate::importPanelSetting(std::string json_string)
 	Json json = Json::parse(json_string);
 	std::vector<std::pair<int, int> > symbols;
 	return PuzzleSymbols(symbols);
+}
+
+
+int randomSize()
+{
+	double num = rand() % 100 / 100.0;
+	return num > 0.05 ? (num > 0.3 ? (num > 0.75 ? (num > 0.9 ? 6 : 5) : 4) : 3) : 2;
+}
+
+bool withP(double threshold)
+{
+	double num = rand() % 1000 / 1000.;
+	return num < threshold;
+}
+
+int randomInt(int low, int high)
+{
+	return rand() % (high - low + 1) + low;
+}
+
+void randomColor(int* colors, int colorCount)
+{
+	for (int i = 0; i < colorCount; ++i)
+	{
+		while (colors[i] == -1)
+		{
+			colors[i] = rand() % 8 + 1;
+			if (colors[i] >= Decoration::Red) colors[i] += 1;
+			for (int j = 0; j < i; ++j)
+			{
+				if (colors[i] == colors[j])
+				{
+					colors[i] = -1;
+					break;
+				}
+			}
+		}
+	}
+}
+
+const int MAX_COLORS = 5;
+void RandomAssignColor(std::vector<std::pair<int,int> > &symbols, int type, int totalCount, int *colors, int colorCount, int forceColor=-1)
+{
+	if (totalCount > 0)
+	{
+		int colorArray[MAX_COLORS] = {};
+		for (int i = 0; i < totalCount; ++i)
+		{
+			int colorID = forceColor == -1 ? rand() % colorCount : forceColor;
+			colorArray[colorID]++;
+		}
+		for (int i = 0; i < colorCount; ++i)
+		{
+			if (colorArray[i] > 0)
+			{
+				symbols.push_back(std::make_pair(type | colors[i], colorArray[i]));
+			}
+		}
+	}
+}
+void Generate::generateRandom(int seed)
+{
+	this->seed(seed);
+	while (true)
+	{
+		int width = randomSize(), height;
+		if (withP(0.5)) height = width; else height = randomSize();
+		bool fullDot = withP(0.1);
+		bool forcePolyColor = withP(0.8);
+		int colors[MAX_COLORS];
+		int sqrtArea = int(round(sqrt(width * height)));
+		int startCount;
+		int endCount;
+		int colorCount;
+		int typeCount;
+		int estimatedComplexity;
+		int squareCount;
+		int starCount;
+		int polyCount;
+		int ylopCount;
+		int triangleCount;
+		int eliminatorCount;
+		int dotCount;
+		int failedCount = 0;
+		do
+		{
+			this->resetConfig();
+			this->setGridSize(width, height);
+			estimatedComplexity = fullDot ? 100 : 10;
+			if (withP(fullDot ? 0.7 : 0.3)) colorCount = 1;
+			else if (withP(0.6)) colorCount = 2;
+			else if (withP(0.6)) colorCount = 3;
+			else colorCount = 4;
+			for (int i = 0; i < colorCount; ++i) colors[i] = -1;
+			if (withP(fullDot? 0.5 : 0.1)) typeCount = 1;
+			else if (withP(0.4)) typeCount = 2;
+			else if (withP(0.8)) typeCount = 3;
+			else typeCount = 4;
+			int currentTypeCount = typeCount;
+			// Starts
+			startCount = 1;
+			//Ends
+			endCount = 1;
+			// Squares
+			if (withP(currentTypeCount / 6.0))
+			{
+				if (colorCount == 1) continue;
+				currentTypeCount -= 1;
+				if (withP(0.5)) squareCount = randomInt(1, sqrtArea);
+				else if (withP(0.9)) squareCount = randomInt(1, 2 * sqrtArea);
+				else squareCount = randomInt(1, 3 * sqrtArea);
+			}
+			else squareCount = 0;
+			// Stars
+			if (withP(currentTypeCount / 5.0))
+			{
+				currentTypeCount -= 1;
+				if (withP(0.6)) starCount = randomInt(1, sqrtArea);
+				else if (withP(0.9)) starCount = randomInt(1, 2 * sqrtArea);
+				else starCount = randomInt(1, 3 * sqrtArea);
+			}
+			else starCount = 0;
+			// Eliminator
+			if (withP(currentTypeCount / 4.0))
+			{
+				if (withP(0.9)) eliminatorCount = 1;
+				else if (withP(0.9)) eliminatorCount = 2;
+				else eliminatorCount = 3;
+				if (fullDot && withP(0.3))
+					this->setFlag(Generate::FalseParity);
+			}
+			else eliminatorCount = 0;
+			// Dot
+			if (withP(currentTypeCount / 3.0))
+			{
+				if (fullDot) continue;
+				currentTypeCount -= 1;
+				if (withP(0.5)) dotCount = randomInt(1, sqrtArea);
+				else if (withP(0.8)) dotCount = randomInt(1, 2 * sqrtArea);
+				else dotCount = randomInt(1, 3 * sqrtArea);
+				if (dotCount > (width + 1) * (height + 1))
+					continue;
+			}
+			else dotCount = 0;
+			if (fullDot) dotCount = (width + 1) * (height + 1);
+			// Poly
+			if (withP(currentTypeCount / 2.0))
+			{
+				currentTypeCount -= 1;
+				if (withP(0.9)) polyCount = randomInt(1, sqrtArea);
+				else polyCount = randomInt(1, 2 * sqrtArea);
+				if (forcePolyColor)
+					colors[0] = Decoration::Yellow;
+				if (withP(0.15))
+					this->setFlag(Generate::RequireCombineShapes);
+				else if (withP(0.1))
+					this->setFlag(Generate::SmallShapes);
+				else if (withP(0.11))
+					this->setFlag(Generate::BigShapes);
+				// Ylop
+				if (withP(0.3))
+				{
+					int maxYLopCount = polyCount + 3;
+					if (withP(0.9)) ylopCount = randomInt(1, min(maxYLopCount, sqrtArea));
+					else ylopCount = randomInt(1, min(maxYLopCount, 2 * sqrtArea));
+					if (forcePolyColor)
+						colors[1] = Decoration::Blue;
+				}
+				else ylopCount = 0;
+			}
+			else
+			{
+				polyCount = 0; ylopCount = 0;
+			}
+			// Triangle
+			if (withP(currentTypeCount / 1.0))
+			{
+				currentTypeCount -= 1;
+				if (withP(0.9)) triangleCount = randomInt(1, sqrtArea);
+				else triangleCount = randomInt(1, 2 * sqrtArea);
+			}
+			else triangleCount = 0;
+			if (triangleCount + ylopCount + polyCount + squareCount + starCount + eliminatorCount > width * height)
+				continue;
+			int score = triangleCount * 3 + ylopCount * 6 + polyCount * 5 + squareCount * 2 + starCount * 3 + eliminatorCount * 5 + (dotCount * 3 + 1) / 4;
+			if (score < width * height)
+				continue;
+
+			std::vector<std::pair<int, int> > symbols;
+			symbols.push_back(std::make_pair(Decoration::Start, startCount));
+			symbols.push_back(std::make_pair(Decoration::Exit, endCount));
+			randomColor(colors, colorCount);
+			RandomAssignColor(symbols, Decoration::Stone, squareCount, colors, colorCount);
+			RandomAssignColor(symbols, Decoration::Star, starCount, colors, colorCount);
+			RandomAssignColor(symbols, Decoration::Eraser, eliminatorCount, colors, colorCount);
+			RandomAssignColor(symbols, Decoration::Poly, polyCount, colors, colorCount, forcePolyColor ? 0 : -1);
+			RandomAssignColor(symbols, Decoration::Poly | Decoration::Negative, ylopCount, colors, colorCount, forcePolyColor ? 1 : -1);
+			RandomAssignColor(symbols, Decoration::Triangle, triangleCount, colors, colorCount);
+			if (dotCount > 0) symbols.push_back(std::make_pair(Decoration::Dot_Intersection, dotCount));
+
+			if (generate(0, PuzzleSymbols(symbols))) return;
+			failedCount += 1;
+			if (failedCount >= 50)
+				break;
+		} while (true);
+	}
 }

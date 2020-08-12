@@ -9,8 +9,10 @@ namespace TWP_Shared
 {
     class RandomizerPanelGenerator : PanelGenerator
     {
-        [DllImport("RandomizerLibrary.dll")]
+        [DllImport("RandomizerLibrary.dll", CallingConvention = CallingConvention.Cdecl)]
         private static extern IntPtr GenerateSamplePuzzle();
+        [DllImport("RandomizerLibrary.dll", CallingConvention = CallingConvention.Cdecl)]
+        private static extern IntPtr GenerateRandomPuzzle(int seed);
 
         public static RandomizerPanelGenerator Instance = new RandomizerPanelGenerator();
         readonly static Random seedGenerator = new Random();
@@ -39,13 +41,15 @@ namespace TWP_Shared
                 case "yellow":
                     return Microsoft.Xna.Framework.Color.Yellow;
                 case "green":
-                    return Microsoft.Xna.Framework.Color.Green;
+                    return Microsoft.Xna.Framework.Color.LightGreen;
                 case "cyan":
                     return Microsoft.Xna.Framework.Color.Aqua;
                 case "orange":
                     return Microsoft.Xna.Framework.Color.OrangeRed;
                 case "magenta":
                     return Microsoft.Xna.Framework.Color.Magenta;
+                case "purple":
+                    return Microsoft.Xna.Framework.Color.Purple;
                 default:
                     return Microsoft.Xna.Framework.Color.Pink;
             }
@@ -109,8 +113,44 @@ namespace TWP_Shared
                     block.Rule = new SunPairRule(NameToColor(color));
                 if (type == "eraser")
                     block.Rule = new EliminationRule(NameToColor(color));
-                // if (jsonGrid[rawP]["poly"] != null)
-                //    block.Rule = new TetrisRule(1,NameToColor(color));
+                if (type=="poly" || type=="ylop")
+                {
+                    int intShape = jsonGrid[rawP]["shape"].ToObject<int>();
+                    bool subtractive = type == "ylop";
+                    int rotation = jsonGrid[rawP]["rotation"].ToObject<int>();
+                    int maxX = 0, maxY = 0;
+                    int minX = 4, minY = 4;
+                    for (int x = 0; x < 4; ++x)
+                    {
+                        for (int y = 0; y < 4; ++y)
+                        {
+                            if ((intShape & (1 << (x + (3 - y) * 4))) > 0)
+                            {
+                                maxX = Math.Max(maxX, x);
+                                maxY = Math.Max(maxY, y);
+                                minX = Math.Min(minX, x);
+                                minY = Math.Min(minY, y);
+                            }
+                        }
+                    }
+                    if(minX>maxX)
+                    {
+                        maxX = minX = maxY = minY = 0;
+                    }
+                    bool[,] binaryShape = new bool[maxX - minX + 1, maxY - minY + 1];
+                    for (int x = minX; x <= maxX; ++x)
+                    {
+                        for (int y = minY; y <= maxY; ++y)
+                        {
+                            if ((intShape & (1 << (x + (3 - y) * 4))) > 0)
+                                binaryShape[x - minX, y - minY] = true;
+                        }
+                    }
+                    if (rotation == 0)
+                        block.Rule = new TetrisRule(binaryShape, subtractive, NameToColor(color));
+                    else
+                        block.Rule = new TetrisRotatableRule(binaryShape, subtractive, NameToColor(color));
+                }
                 if (type == "triangle")
                     block.Rule = new TriangleRule(jsonGrid[rawP]["number"].ToObject<int>(), NameToColor(color));
             }
@@ -121,7 +161,7 @@ namespace TWP_Shared
             if (seed == null)
                 seed = seedGenerator.Next(1000000000);
             Random rnd = new Random(seed.Value);
-            IntPtr ptr = GenerateSamplePuzzle();
+            IntPtr ptr = GenerateRandomPuzzle(seed.Value);
             string jsonString = Marshal.PtrToStringAnsi(ptr);
             ColorPalettesLibrary.ColorPalette panelPalette = ColorPalettesLibrary.Palettes[rnd.Next(ColorPalettesLibrary.Size)];
             return DecodePanelFromJson(jsonString, panelPalette, seed.Value);
