@@ -450,7 +450,8 @@ namespace TWP_Shared
             foreach (var block in triangleRuleBlocks)
             {
                 int texIndex = (block.Rule as TriangleRule).Power - 1;
-                spriteBatch.Draw(texTriangle[texIndex], new Rectangle(BlockPositionToOnScreenLocation(block.X, block.Y), BlockSizePoint), fillColor ?? Color.Gold);
+                Color color = (block.Rule as TriangleRule).Color ?? Color.Gold;
+                spriteBatch.Draw(texTriangle[texIndex], new Rectangle(BlockPositionToOnScreenLocation(block.X, block.Y), BlockSizePoint), fillColor ?? color);
             }
         }
         private void DrawTetrises(SpriteBatch spriteBatch, IEnumerable<Block> allBlocks, Color? fillColor = null)

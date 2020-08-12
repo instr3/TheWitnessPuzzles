@@ -80,14 +80,19 @@ namespace TheWitnessPuzzles
     }
 
     // Solution line must pass by triangle block exactly <Power> times (1 to 3)
-    public class TriangleRule : BlockRule, ISelfCheckableRule
+    public class TriangleRule : BlockRule, ISelfCheckableRule, IColorable
     {
         public int Power { get; }
 
-        public TriangleRule(int power)
+        public Color? Color { get; }
+
+        public bool HasColor => Color.HasValue;
+
+        public TriangleRule(int power, Color? color = null)
         {
             // Power can be between 1 and 3
             Power = power < 1 ? 1 : power > 3 ? 3 : power;
+            Color = color;
         }
 
         public Error CheckRule()

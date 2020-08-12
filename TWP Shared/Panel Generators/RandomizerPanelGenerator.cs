@@ -102,16 +102,17 @@ namespace TWP_Shared
                     GetRawYFromNodeID(block.Nodes[2].Id, rawWidth, rawHeight) + GetRawYFromNodeID(block.Nodes[3].Id, rawWidth, rawHeight)) / 4;
                 int rawP = rawX * rawHeight + rawY;
                 string type = jsonGrid[rawP]["type"].ToString();
+                string color = jsonGrid[rawP]["color"]?.ToString();
                 if (type == "square")
-                    block.Rule = new ColoredSquareRule(NameToColor(jsonGrid[rawP]["color"].ToString()));
+                    block.Rule = new ColoredSquareRule(NameToColor(color));
                 if (type == "star")
-                    block.Rule = new SunPairRule(NameToColor(jsonGrid[rawP]["color"].ToString()));
+                    block.Rule = new SunPairRule(NameToColor(color));
                 if (type == "eraser")
-                    block.Rule = new EliminationRule(NameToColor(jsonGrid[rawP]["color"].ToString()));
+                    block.Rule = new EliminationRule(NameToColor(color));
                 // if (jsonGrid[rawP]["poly"] != null)
-                //    block.Rule = new TetrisRule(1,NameToColor(jsonGrid[rawP]["color"].ToString()));
+                //    block.Rule = new TetrisRule(1,NameToColor(color));
                 if (type == "triangle")
-                    block.Rule = new TriangleRule(jsonGrid[rawP]["number"].ToObject<int>());
+                    block.Rule = new TriangleRule(jsonGrid[rawP]["number"].ToObject<int>(), NameToColor(color));
             }
             return puzzle;
         }

@@ -262,6 +262,7 @@ namespace TWP_Shared
                             var rule = block.Rule as TriangleRule;
                             br.Write(block.Id);                             // int
                             br.Write(rule.Power);                           // int
+                            br.Write(rule.Color.Value.PackedValue);         // uint
                         }
 
                         // Elimination rules
@@ -413,7 +414,8 @@ namespace TWP_Shared
                             {
                                 int blockID = br.ReadInt32();
                                 int power = br.ReadInt32();
-                                blocks.Find(x => x.Id == blockID).Rule = new TriangleRule(power);
+                                Color col = new Color(br.ReadUInt32());
+                                blocks.Find(x => x.Id == blockID).Rule = new TriangleRule(power, col);
                             }
 
                             // Elimination rules
