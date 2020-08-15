@@ -162,10 +162,10 @@ int randomSize(int symmetry)
 	double num = rand() % 100 / 100.0;
 	if (symmetry == -1)
 		return num > 0.3 ? (num > 0.33 ? (num > 0.87 ? (num > 0.9 ? 7 : 6) : 5) : 4) : 3;
-	else if(symmetry>0)
-		return num > 0.3 ? (num > 0.75 ? (num > 0.87 ? (num > 0.9 ? 7 : 6) : 5) : 4) : 3;
+	else if (symmetry > 0)
+		return num > 0.6 ? (num > 0.75 ? (num > 0.87 ? 7 : 6) : 5) : 4;
 	else
-		return num > 0.05 ? (num > 0.3 ? (num > 0.75 ? (num > 0.9 ? 6 : 5) : 4) : 3) : 2;
+		return num > 0.03 ? (num > 0.3 ? (num > 0.75 ? (num > 0.9 ? 6 : 5) : 4) : 3) : 2;
 }
 
 bool withP(double threshold)
@@ -216,25 +216,78 @@ void randomColor(int* colors, int colorCount)
 	}
 }
 
-const int MAX_COLORS = 5;
+const int MAX_COLORS = 0x10;
 int dotColors[] = { Decoration::Color::Black,Decoration::Color::Blue,Decoration::Color::Yellow };
-void RandomAssignColor(std::vector<std::pair<int,int> > &symbols, int type, int totalCount, int *colors, int colorCount, int forceColor=-1)
+void RandomAssignColor(std::vector<std::pair<int,int> > &symbols, int type, int totalCount, int *colors, int colorCount, int suggestedColor=-1, bool *starHasColor=NULL,
+	bool forceSuggestedColor=false)
 {
 	if (totalCount > 0)
 	{
 		int colorArray[MAX_COLORS] = {};
 		for (int i = 0; i < totalCount; ++i)
 		{
-			int colorID = forceColor == -1 ? rand() % colorCount : forceColor;
-			colorArray[colorID]++;
+			int color = forceSuggestedColor ? suggestedColor : colors[rand() % colorCount];
+			colorArray[color]++;
 		}
-		for (int i = 0; i < colorCount; ++i)
+		if (starHasColor != NULL)
+		{
+			for (int p = 0; p < MAX_COLORS; ++p)
+			{
+				if (p == suggestedColor) continue;
+				if (colorArray[p] > 0 && !starHasColor[p] && !starHasColor[suggestedColor])
+				{
+					// The colors are useless
+					colorArray[suggestedColor] += colorArray[p];
+					colorArray[p] = 0;
+				}
+			}
+		}
+		for (int i = 0; i < MAX_COLORS; ++i)
 		{
 			if (colorArray[i] > 0)
 			{
-				symbols.push_back(std::make_pair(type | colors[i], colorArray[i]));
+				symbols.push_back(std::make_pair(type | i, colorArray[i]));
 			}
 		}
+	}
+}
+void RandomAssignSquareColor(std::vector<std::pair<int, int> >& symbols, int type, int totalCount, int* colors, int colorCount, bool *starHasColor)
+{
+	if (totalCount == 0)
+		return;
+	int failCount = 0;
+	while (totalCount > 0)
+	{
+		int colorArray[MAX_COLORS] = {};
+		for (int i = 0; i < totalCount; ++i)
+		{
+			int color = colors[rand() % colorCount];
+			colorArray[color]++;
+		}
+		int colorCount = 0;
+		int p = 0;
+		for (p = 0; p < MAX_COLORS; ++p)
+		{
+			if (colorArray[p] > 0)
+			{
+				colorCount += 1;
+				break;
+			}
+		}
+		if (colorCount == 1 && !starHasColor[p])
+		{
+			// The squares are useless and we do not want it
+			if (failCount++ < 10)
+				continue;
+		}
+		for (int i = 0; i < MAX_COLORS; ++i)
+		{
+			if (colorArray[i] > 0)
+			{
+				symbols.push_back(std::make_pair(type | i, colorArray[i]));
+			}
+		}
+		break;
 	}
 }
 void Generate::generateRandom(int seed, bool debug)
@@ -242,11 +295,11 @@ void Generate::generateRandom(int seed, bool debug)
 	this->seed(seed);
 	while (true)
 	{
-		bool fullDot = withP(0.1);
+		bool fullDot = withP(0.07);
 		bool forcePolyColor = withP(0.8);
 		int symmetry = fullDot ? 0 : selectP(0.7, 0, 0.15, 1, 2);
 		int width = randomSize(symmetry == 2 ? -1 : symmetry), height;
-		if (withP(0.5)) height = width; else height = randomSize(symmetry);
+		if (width >= 4 && withP(0.5)) height = width; else height = randomSize(symmetry);
 		int colors[MAX_COLORS];
 		int sqrtArea = int(round(sqrt(width * height)));
 		int startCount;
@@ -289,24 +342,13 @@ void Generate::generateRandom(int seed, bool debug)
 
 			if (!fullDot)
 			{
-				if (withP(0.01))
+				if (withP(0.02))
 					this->setFlag(Generate::ShortPath);
 				else if (withP(0.05))
 					this->setFlag(Generate::LongPath);
 			}
-
-			// Squares
-			if (withP(currentTypeCount / 6.0))
-			{
-				if (colorCount == 1) continue;
-				currentTypeCount -= 1;
-				if (withP(0.5)) squareCount = randomInt(1, sqrtArea);
-				else if (withP(0.9)) squareCount = randomInt(1, 2 * sqrtArea);
-				else squareCount = randomInt(1, 3 * sqrtArea);
-			}
-			else squareCount = 0;
 			// Stars
-			if (withP(currentTypeCount / 5.0))
+			if (withP(currentTypeCount / 6.0))
 			{
 				currentTypeCount -= 1;
 				if (withP(0.6)) starCount = randomInt(1, sqrtArea);
@@ -314,6 +356,17 @@ void Generate::generateRandom(int seed, bool debug)
 				else starCount = randomInt(1, 3 * sqrtArea);
 			}
 			else starCount = 0;
+			// Squares
+			if (withP(currentTypeCount / 5.0))
+			{
+				if (colorCount == 1 && starCount == 0) continue;
+				currentTypeCount -= 1;
+				if (withP(0.5)) squareCount = randomInt(1, sqrtArea);
+				else if (withP(0.9)) squareCount = randomInt(1, 2 * sqrtArea);
+				else squareCount = randomInt(1, 3 * sqrtArea);
+				if (squareCount == 1 && starCount == 0) continue;
+			}
+			else squareCount = 0;
 			// Eliminator
 			if (withP(currentTypeCount / 4.0))
 			{
@@ -382,15 +435,18 @@ void Generate::generateRandom(int seed, bool debug)
 				continue;
 
 			std::vector<std::pair<int, int> > symbols;
+			randomColor(colors, colorCount);
+			RandomAssignColor(symbols, Decoration::Star, starCount, colors, colorCount);
+			bool starHasColor[MAX_COLORS] = {};
+			for (std::pair<int, int> symbol : symbols)
+				starHasColor[symbol.first & 0xf] = true;
 			symbols.push_back(std::make_pair(Decoration::Start, startCount));
 			symbols.push_back(std::make_pair(Decoration::Exit, endCount));
-			randomColor(colors, colorCount);
-			RandomAssignColor(symbols, Decoration::Stone, squareCount, colors, colorCount);
-			RandomAssignColor(symbols, Decoration::Star, starCount, colors, colorCount);
-			RandomAssignColor(symbols, Decoration::Eraser, eliminatorCount, colors, colorCount);
-			RandomAssignColor(symbols, Decoration::Poly, polyCount, colors, colorCount, forcePolyColor ? 0 : -1);
-			RandomAssignColor(symbols, Decoration::Poly | Decoration::Negative, ylopCount, colors, colorCount, forcePolyColor ? 1 : -1);
-			RandomAssignColor(symbols, Decoration::Triangle, triangleCount, colors, colorCount);
+			RandomAssignSquareColor(symbols, Decoration::Stone, squareCount, colors, colorCount, starHasColor);
+			RandomAssignColor(symbols, Decoration::Eraser, eliminatorCount, colors, colorCount, Decoration::Color::White, starHasColor);
+			RandomAssignColor(symbols, Decoration::Poly, polyCount, colors, colorCount, Decoration::Color::Yellow, starHasColor, forcePolyColor);
+			RandomAssignColor(symbols, Decoration::Poly | Decoration::Negative, ylopCount, colors, colorCount, Decoration::Color::Blue, starHasColor, forcePolyColor);
+			RandomAssignColor(symbols, Decoration::Triangle, triangleCount, colors, colorCount, Decoration::Color::Yellow, starHasColor);
 			if (fullDot) symbols.push_back(std::make_pair(Decoration::Dot_Intersection | Decoration::Color::Black, dotCount));
 			else if (dotCount > 0)
 			{
