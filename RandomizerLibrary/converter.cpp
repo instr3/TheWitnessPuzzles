@@ -314,6 +314,7 @@ void Generate::generateRandom(int seed, bool debug)
 		int triangleCount;
 		int eliminatorCount;
 		int dotCount;
+		int gapCount;
 		int failedCount = 0;
 		do
 		{
@@ -426,6 +427,13 @@ void Generate::generateRandom(int seed, bool debug)
 						continue;
 			}
 			else dotCount = 0;
+			// Gap
+			if (withP(0.8))
+			{
+				if (withP(0.8)) gapCount = randomInt(0, sqrtArea);
+				else gapCount = randomInt(0, 2 * sqrtArea);
+			}
+			else gapCount = 0;
 				if (fullDot) dotCount = (width + 1) * (height + 1);
 			// End of elements
 			if (triangleCount + ylopCount + polyCount + squareCount + starCount + eliminatorCount > width * height)
@@ -442,6 +450,7 @@ void Generate::generateRandom(int seed, bool debug)
 				starHasColor[symbol.first & 0xf] = true;
 			symbols.push_back(std::make_pair(Decoration::Start, startCount));
 			symbols.push_back(std::make_pair(Decoration::Exit, endCount));
+			symbols.push_back(std::make_pair(Decoration::Gap, gapCount));
 			RandomAssignSquareColor(symbols, Decoration::Stone, squareCount, colors, colorCount, starHasColor);
 			RandomAssignColor(symbols, Decoration::Eraser, eliminatorCount, colors, colorCount, Decoration::Color::White, starHasColor);
 			RandomAssignColor(symbols, Decoration::Poly, polyCount, colors, colorCount, Decoration::Color::Yellow, starHasColor, forcePolyColor);
