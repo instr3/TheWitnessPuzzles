@@ -165,7 +165,7 @@ int randomSize(int symmetry)
 	else if (symmetry > 0)
 		return num > 0.6 ? (num > 0.75 ? (num > 0.87 ? 7 : 6) : 5) : 4;
 	else
-		return num > 0.03 ? (num > 0.3 ? (num > 0.75 ? (num > 0.9 ? 6 : 5) : 4) : 3) : 2;
+		return num > 0.01 ? (num > 0.3 ? (num > 0.75 ? (num > 0.9 ? 6 : 5) : 4) : 3) : 2;
 }
 
 bool withP(double threshold)
@@ -295,7 +295,7 @@ void Generate::generateRandom(int seed, bool debug)
 	this->seed(seed);
 	while (true)
 	{
-		bool fullDot = withP(0.07);
+		bool fullDot = withP(0.1);
 		bool forcePolyColor = withP(0.8);
 		int symmetry = fullDot ? 0 : selectP(0.7, 0, 0.15, 1, 2);
 		int width = randomSize(symmetry == 2 ? -1 : symmetry), height;
